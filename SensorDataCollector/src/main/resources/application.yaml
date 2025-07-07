@@ -1,0 +1,58 @@
+# -------------------------------------------
+# Spring Boot Configuration
+# -------------------------------------------
+server:
+  port: 8081 # Puerto para este microservicio
+
+spring:
+  application:
+    name: sensor-data-collector # Nombre con el que se registrará en Eureka
+
+  # -------------------------------------------
+  # DataSource Configuration (CockroachDB)
+  # -------------------------------------------
+  datasource:
+    url: jdbc:postgresql://localhost:26259/environmental_monitoring_db?user=root&password=username=root
+    #password: ""
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  # -------------------------------------------
+  # RabbitMQ Configuration
+  # -------------------------------------------
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin
+
+# -------------------------------------------
+# Eureka Client Configuration
+# -------------------------------------------
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    prefer-ip-address: true
+
+# -------------------------------------------
+# Logging Configuration
+# -------------------------------------------
+logging:
+  level:
+    root: INFO
+    ec.edu.espe.SensorDataCollector: DEBUG
+
+# -------------------------------------------
+# Custom Application Properties
+# -------------------------------------------
+app:
+  rabbitmq:
+    exchange-name: "environmental.events.exchange"
+    queue-name: "q.events.sensor-data-collector"

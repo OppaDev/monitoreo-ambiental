@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfig {
 
     // El nombre del exchange global donde se publican TODOS los eventos
-    public static final String GLOBAL_EVENTS_EXCHANGE = "global-events-exchange";
+    public static final String GLOBAL_EVENTS_EXCHANGE = "environmental.events.exchange";
 
     // Usar la nomenclatura estándar definida en SystemConstants
     public static final String ANALYZER_QUEUE = SystemConstants.Queues.ENVIRONMENTAL_ANALYZER;

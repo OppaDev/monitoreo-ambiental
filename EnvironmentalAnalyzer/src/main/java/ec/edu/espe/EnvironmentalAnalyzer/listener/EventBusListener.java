@@ -22,11 +22,12 @@ public class EventBusListener {
     private ObjectMapper objectMapper;
 
     /**
-     * Escucha eventos del bus global y procesa los que son relevantes para el análisis
+     * Escucha eventos del bus global desde la cola q.events.environmental-analyzer
+     * y procesa los que son relevantes para el análisis
      */
     @RabbitListener(queues = RabbitMQConfig.ANALYZER_QUEUE)
     public void handleGlobalEvent(Object event) {
-        log.debug("Evento recibido en EnvironmentalAnalyzer: {}", event.getClass().getSimpleName());
+        log.info("Evento recibido en cola {}: {}", RabbitMQConfig.ANALYZER_QUEUE, event.getClass().getSimpleName());
         
         try {
             // Si el evento es directamente un NewSensorReadingEvent

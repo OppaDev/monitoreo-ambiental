@@ -15,8 +15,8 @@ public class RabbitMQConfig {
     // El nombre del exchange global donde se publican TODOS los eventos
     public static final String GLOBAL_EVENTS_EXCHANGE = "global-events-exchange";
 
-    // El nombre de la cola específica para este microservicio
-    public static final String ANALYZER_QUEUE = "analyzer-queue";
+    // Usar la nomenclatura estándar definida en SystemConstants
+    public static final String ANALYZER_QUEUE = SystemConstants.Queues.ENVIRONMENTAL_ANALYZER;
 
     @Bean
     public FanoutExchange globalEventsExchange() {

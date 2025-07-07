@@ -13,7 +13,7 @@ services:
       - "8080:8080"    # UI
     volumes:
       - cockroach1:/cockroach/cockroach-data
-    command: start --insecure --store=/cockroach/cockroach-data --listen-addr=crdb-node1:26257 --http-addr=crdb-node1:8080 --join=crdb-node1:26257,crdb-node2:26257,crdb-node3:26257 --locality=region=geo-zone-1,dc=dc-a
+    command: start --insecure --store=/cockroach/cockroach-data --listen-addr=0.0.0.0:26257 --http-addr=0.0.0.0:8080 --join=crdb-node1:26257,crdb-node2:26257,crdb-node3:26257 --locality=region=geo-zone-1,dc=dc-a
 
   # Nodo 2 del clúster - Zona geográfica 1 (Réplica local)
   cockroach2:
@@ -27,7 +27,7 @@ services:
       - "8081:8080"    # UI
     volumes:
       - cockroach2:/cockroach/cockroach-data
-    command: start --insecure --store=/cockroach/cockroach-data --listen-addr=crdb-node2:26257 --http-addr=crdb-node2:8080 --join=crdb-node1:26257,crdb-node2:26257,crdb-node3:26257 --locality=region=geo-zone-1,dc=dc-b
+    command: start --insecure --store=/cockroach/cockroach-data --listen-addr=0.0.0.0:26257 --http-addr=0.0.0.0:8080 --join=crdb-node1:26257,crdb-node2:26257,crdb-node3:26257 --locality=region=geo-zone-1,dc=dc-b
 
   # Nodo 3 del clúster - Zona geográfica 2 (Réplica remota)
   cockroach3:
@@ -41,7 +41,7 @@ services:
       - "8082:8080"    # UI
     volumes:
       - cockroach3:/cockroach/cockroach-data
-    command: start --insecure --store=/cockroach/cockroach-data --listen-addr=crdb-node3:26257 --http-addr=crdb-node3:8080 --join=crdb-node1:26257,crdb-node2:26257,crdb-node3:26257 --locality=region=geo-zone-2,dc=dc-c
+    command: start --insecure --store=/cockroach/cockroach-data --listen-addr=0.0.0.0:26257 --http-addr=0.0.0.0:8080 --join=crdb-node1:26257,crdb-node2:26257,crdb-node3:26257 --locality=region=geo-zone-2,dc=dc-c
 
   # Contenedor para inicializar el clúster. Se ejecuta una sola vez.
   roach-init:

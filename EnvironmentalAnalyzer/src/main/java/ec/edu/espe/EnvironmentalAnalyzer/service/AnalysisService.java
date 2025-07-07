@@ -1,6 +1,7 @@
 package ec.edu.espe.EnvironmentalAnalyzer.service;
 
 import ec.edu.espe.EnvironmentalAnalyzer.config.RabbitMQConfig;
+import ec.edu.espe.EnvironmentalAnalyzer.config.SystemConstants;
 import ec.edu.espe.EnvironmentalAnalyzer.dto.NewSensorReadingEvent;
 import ec.edu.espe.EnvironmentalAnalyzer.entity.Alert;
 import ec.edu.espe.EnvironmentalAnalyzer.repository.AlertRepository;
@@ -25,16 +26,20 @@ public class AnalysisService {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    // Umbrales según las especificaciones del documento
-    private static final double TEMP_THRESHOLD = 40.0; // Temperatura alta: > 40°C
-    private static final double HUMIDITY_THRESHOLD = 20.0; // Humedad baja: < 20%
-    private static final double SEISMIC_THRESHOLD = 3.0; // Actividad sísmica: > 3.0 en escala Richter
+    // Umbrales
+    private static final double TEMP_THRESHOLD = SystemConstants.DefaultThresholds.TEMPERATURE;
+    private static final double HUMIDITY_THRESHOLD = SystemConstants.DefaultThresholds.HUMIDITY;
+    private static final double SEISMIC_THRESHOLD = SystemConstants.DefaultThresholds.SEISMIC;
+    
+    // Constante para evitar duplicación de literales
+    private static final String TIMESTAMP_KEY = "timestamp";
 
     /**
      * Analiza las lecturas de sensores y genera alertas según los umbrales definidos
+     * Recibe eventos desde la cola q.events.environmental-analyzer
      */
     public void analyzeSensorReading(NewSensorReadingEvent event) {
-        log.info("Analizando lectura del sensor {}: tipo={}, valor={}", 
+        log.info("Analizando lectura del sensor {}: tipo={}, valor={} (desde cola q.events.environmental-analyzer)", 
                 event.getSensorId(), event.getType(), event.getValue());
 
         if (event.getValue() == null) {
@@ -43,19 +48,19 @@ public class AnalysisService {
         }
 
         switch (event.getType().toLowerCase()) {
-            case "temperature":
+            case SystemConstants.SensorTypes.TEMPERATURE:
                 if (event.getValue() > TEMP_THRESHOLD) {
-                    createAndPublishAlert(event, "HighTemperatureAlert", TEMP_THRESHOLD);
+                    createAndPublishAlert(event, SystemConstants.EventTypes.HIGH_TEMPERATURE_ALERT, TEMP_THRESHOLD);
                 }
                 break;
-            case "humidity":
+            case SystemConstants.SensorTypes.HUMIDITY:
                 if (event.getValue() < HUMIDITY_THRESHOLD) {
-                    createAndPublishAlert(event, "LowHumidityWarning", HUMIDITY_THRESHOLD);
+                    createAndPublishAlert(event, SystemConstants.EventTypes.LOW_HUMIDITY_WARNING, HUMIDITY_THRESHOLD);
                 }
                 break;
-            case "seismic":
+            case SystemConstants.SensorTypes.SEISMIC:
                 if (event.getValue() > SEISMIC_THRESHOLD) {
-                    createAndPublishAlert(event, "SeismicActivityDetected", SEISMIC_THRESHOLD);
+                    createAndPublishAlert(event, SystemConstants.EventTypes.SEISMIC_ACTIVITY_DETECTED, SEISMIC_THRESHOLD);
                 }
                 break;
             default:
@@ -91,7 +96,7 @@ public class AnalysisService {
             alertEvent.put("sensorId", reading.getSensorId());
             alertEvent.put("value", reading.getValue());
             alertEvent.put("threshold", threshold);
-            alertEvent.put("timestamp", alert.getTimestamp().toString());
+            alertEvent.put(TIMESTAMP_KEY, alert.getTimestamp().toString());
 
             // 3. Publicar el evento de alerta al exchange global
             rabbitTemplate.convertAndSend(RabbitMQConfig.GLOBAL_EVENTS_EXCHANGE, "", alertEvent);
@@ -119,10 +124,10 @@ public class AnalysisService {
             
             // Calcular estadísticas básicas
             Map<String, Object> reportData = new HashMap<>();
-            reportData.put("eventType", "DailyReportGenerated");
+            reportData.put("eventType", SystemConstants.EventTypes.DAILY_REPORT_GENERATED);
             reportData.put("reportDate", today.toLocalDate().toString());
             reportData.put("totalAlerts", dailyAlerts.size());
-            reportData.put("timestamp", ZonedDateTime.now().toString());
+            reportData.put(TIMESTAMP_KEY, ZonedDateTime.now().toString());
             
             // Contar alertas por tipo
             Map<String, Long> alertsByType = new HashMap<>();
@@ -165,10 +170,10 @@ public class AnalysisService {
                 
                 // Simular evento de sensor inactivo
                 Map<String, Object> inactiveAlert = new HashMap<>();
-                inactiveAlert.put("eventType", "SensorInactiveAlert");
+                inactiveAlert.put("eventType", SystemConstants.EventTypes.SENSOR_INACTIVE_ALERT);
                 inactiveAlert.put("sensorId", "UNKNOWN-SENSORS");
                 inactiveAlert.put("lastSeen", cutoffTime.toString());
-                inactiveAlert.put("timestamp", ZonedDateTime.now().toString());
+                inactiveAlert.put(TIMESTAMP_KEY, ZonedDateTime.now().toString());
                 inactiveAlert.put("message", "No se detectaron lecturas de sensores en las últimas 24 horas");
                 
                 rabbitTemplate.convertAndSend(RabbitMQConfig.GLOBAL_EVENTS_EXCHANGE, "", inactiveAlert);
@@ -202,7 +207,7 @@ public class AnalysisService {
                             java.util.stream.Collectors.counting()));
             
             stats.put("alertsByType", alertsByType);
-            stats.put("timestamp", ZonedDateTime.now().toString());
+            stats.put(TIMESTAMP_KEY, ZonedDateTime.now().toString());
             
             return stats;
         } catch (Exception e) {

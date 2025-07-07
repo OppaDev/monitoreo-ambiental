@@ -1,0 +1,59 @@
+spring:
+  application:
+    name: environmental-analyzer
+  datasource:
+    url: jdbc:postgresql://localhost:26258/analyzer_db?user=root&password=
+    username: root
+    password:
+  jpa:
+    hibernate:
+        ddl-auto: update
+    properties:
+        hibernate:
+        dialect: org.hibernate.dialect.CockroachDBDialect
+        format_sql: true
+    show-sql: true
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin
+
+server:
+  port: 8082
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+    fetchRegistry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+# Configuración específica del analizador ambiental
+environmental-analyzer:
+  thresholds:
+    temperature: 40.0
+    humidity: 20.0
+    seismic: 3.0
+  scheduling:
+    daily-report: "0 0 0 * * ?"
+    inactive-sensors-check: "0 0 */6 * * ?"
+
+# Logging configuration
+logging:
+  level:
+    ec.edu.espe.EnvironmentalAnalyzer: INFO
+    org.springframework.amqp: DEBUG
+    org.hibernate.SQL: DEBUG

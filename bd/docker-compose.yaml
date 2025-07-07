@@ -1,57 +1,59 @@
 version: '3.8'
 
 services:
-  # Nodo 1 del clúster, en la zona geográfica 1
-  roach-1:
-    image: cockroachdb/cockroach:v23.1.10
-    container_name: roach-1
-    hostname: roach-1
+  # Nodo 1 del clúster - Zona geográfica 1 (Nodo líder)
+  cockroach1:
+    image: cockroachdb/cockroach:latest
+    container_name: crdb-node1
+    hostname: crdb-node1  # Importante para el DNS interno
     networks:
       - roach-net
     ports:
-      - "26257:26257" # Puerto SQL para el primer nodo
-      - "8080:8080"   # UI Web para el primer nodo
+      - "26257:26257"  # SQL (externo:26257 → interno:26257)
+      - "8080:8080"    # UI
     volumes:
-      - roach-data-1:/cockroach/cockroach-data
-    command: start --insecure --store=/cockroach/cockroach-data --listen-addr=roach-1:26257 --http-addr=roach-1:8080 --join=roach-1,roach-2,roach-3 --locality=region=geo-zone-1,dc=dc-a
+      - cockroach1:/cockroach/cockroach-data
+    command: start --insecure --store=/cockroach/cockroach-data --listen-addr=crdb-node1:26257 --http-addr=crdb-node1:8080 --join=crdb-node1:26257,crdb-node2:26257,crdb-node3:26257 --locality=region=geo-zone-1,dc=dc-a
 
-  # Nodo 2 del clúster, también en la zona geográfica 1
-  roach-2:
-    image: cockroachdb/cockroach:v23.1.10
-    container_name: roach-2
-    hostname: roach-2
+  # Nodo 2 del clúster - Zona geográfica 1 (Réplica local)
+  cockroach2:
+    image: cockroachdb/cockroach:latest
+    container_name: crdb-node2
+    hostname: crdb-node2
     networks:
       - roach-net
     ports:
-      - "26258:26257" # Puerto SQL para el segundo nodo
+      - "26258:26257"  # SQL (externo:26258 → interno:26257)
+      - "8081:8080"    # UI
     volumes:
-      - roach-data-2:/cockroach/cockroach-data
-    command: start --insecure --store=/cockroach/cockroach-data --listen-addr=roach-2:26257 --http-addr=roach-2:8080 --join=roach-1,roach-2,roach-3 --locality=region=geo-zone-1,dc=dc-b
+      - cockroach2:/cockroach/cockroach-data
+    command: start --insecure --store=/cockroach/cockroach-data --listen-addr=crdb-node2:26257 --http-addr=crdb-node2:8080 --join=crdb-node1:26257,crdb-node2:26257,crdb-node3:26257 --locality=region=geo-zone-1,dc=dc-b
 
-  # Nodo 3 del clúster, en la zona geográfica 2
-  roach-3:
-    image: cockroachdb/cockroach:v23.1.10
-    container_name: roach-3
-    hostname: roach-3
+  # Nodo 3 del clúster - Zona geográfica 2 (Réplica remota)
+  cockroach3:
+    image: cockroachdb/cockroach:latest
+    container_name: crdb-node3
+    hostname: crdb-node3
     networks:
       - roach-net
     ports:
-      - "26259:26257" # Puerto SQL para el tercer nodo
+      - "26259:26257"  # SQL (externo:26259 → interno:26257)
+      - "8082:8080"    # UI
     volumes:
-      - roach-data-3:/cockroach/cockroach-data
-    command: start --insecure --store=/cockroach/cockroach-data --listen-addr=roach-3:26257 --http-addr=roach-3:8080 --join=roach-1,roach-2,roach-3 --locality=region=geo-zone-2,dc=dc-c
+      - cockroach3:/cockroach/cockroach-data
+    command: start --insecure --store=/cockroach/cockroach-data --listen-addr=crdb-node3:26257 --http-addr=crdb-node3:8080 --join=crdb-node1:26257,crdb-node2:26257,crdb-node3:26257 --locality=region=geo-zone-2,dc=dc-c
 
   # Contenedor para inicializar el clúster. Se ejecuta una sola vez.
   roach-init:
-    image: cockroachdb/cockroach:v23.1.10
+    image: cockroachdb/cockroach:latest
     container_name: roach-init
     networks:
       - roach-net
     depends_on:
-      - roach-1
-      - roach-2
-      - roach-3
-    command: init --insecure --host=roach-1:26257
+      - cockroach1
+      - cockroach2
+      - cockroach3
+    command: init --insecure --host=crdb-node1:26257
 
 # Red para que los nodos se comuniquen entre sí
 networks:
@@ -60,6 +62,6 @@ networks:
 
 # Volúmenes para persistir los datos de cada nodo
 volumes:
-  roach-data-1:
-  roach-data-2:
-  roach-data-3:
+  cockroach1:
+  cockroach2:
+  cockroach3:

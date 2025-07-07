@@ -1,6 +1,5 @@
 package ec.edu.espe.EnvironmentalAnalyzer.listener;
 
-import ec.edu.espe.EnvironmentalAnalyzer.config.RabbitMQConfig;
 import ec.edu.espe.EnvironmentalAnalyzer.dto.NewSensorReadingEvent;
 import ec.edu.espe.EnvironmentalAnalyzer.service.AnalysisService;
 import lombok.extern.slf4j.Slf4j;
@@ -25,9 +24,9 @@ public class EventBusListener {
      * Escucha eventos del bus global desde la cola q.events.environmental-analyzer
      * y procesa los que son relevantes para el análisis
      */
-    @RabbitListener(queues = RabbitMQConfig.ANALYZER_QUEUE)
+    @RabbitListener(queues = "${app-config.queues.analyzer}")
     public void handleGlobalEvent(Object event) {
-        log.info("Evento recibido en cola {}: {}", RabbitMQConfig.ANALYZER_QUEUE, event.getClass().getSimpleName());
+        log.info("Evento recibido en cola environmental-analyzer: {}", event.getClass().getSimpleName());
         
         try {
             // Si el evento es directamente un NewSensorReadingEvent

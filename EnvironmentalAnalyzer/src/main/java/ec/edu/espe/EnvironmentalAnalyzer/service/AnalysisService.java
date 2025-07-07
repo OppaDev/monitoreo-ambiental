@@ -1,13 +1,12 @@
 package ec.edu.espe.EnvironmentalAnalyzer.service;
 
-import ec.edu.espe.EnvironmentalAnalyzer.config.RabbitMQConfig;
-import ec.edu.espe.EnvironmentalAnalyzer.config.SystemConstants;
 import ec.edu.espe.EnvironmentalAnalyzer.dto.NewSensorReadingEvent;
 import ec.edu.espe.EnvironmentalAnalyzer.entity.Alert;
 import ec.edu.espe.EnvironmentalAnalyzer.repository.AlertRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -26,10 +25,44 @@ public class AnalysisService {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    // Umbrales
-    private static final double TEMP_THRESHOLD = SystemConstants.DefaultThresholds.TEMPERATURE;
-    private static final double HUMIDITY_THRESHOLD = SystemConstants.DefaultThresholds.HUMIDITY;
-    private static final double SEISMIC_THRESHOLD = SystemConstants.DefaultThresholds.SEISMIC;
+    // Umbrales configurables desde application.yaml
+    @Value("${app-config.thresholds.temperature}")
+    private double tempThreshold;
+
+    @Value("${app-config.thresholds.humidity}")
+    private double humidityThreshold;
+
+    @Value("${app-config.thresholds.seismic}")
+    private double seismicThreshold;
+
+    // Tipos de sensores
+    @Value("${app-config.sensor-types.temperature}")
+    private String temperatureSensorType;
+
+    @Value("${app-config.sensor-types.humidity}")
+    private String humiditySensorType;
+
+    @Value("${app-config.sensor-types.seismic}")
+    private String seismicSensorType;
+
+    // Tipos de eventos de alerta
+    @Value("${app-config.event-types.high-temp-alert}")
+    private String highTempAlertType;
+
+    @Value("${app-config.event-types.low-humidity-warning}")
+    private String lowHumidityWarningType;
+
+    @Value("${app-config.event-types.seismic-activity-detected}")
+    private String seismicActivityDetectedType;
+
+    @Value("${app-config.event-types.daily-report-generated}")
+    private String dailyReportGeneratedType;
+
+    @Value("${app-config.event-types.sensor-inactive-alert}")
+    private String sensorInactiveAlertType;
+
+    @Value("${app-config.exchanges.global-events}")
+    private String globalEventsExchange;
     
     // Constante para evitar duplicación de literales
     private static final String TIMESTAMP_KEY = "timestamp";
@@ -48,19 +81,19 @@ public class AnalysisService {
         }
 
         switch (event.getType().toLowerCase()) {
-            case SystemConstants.SensorTypes.TEMPERATURE:
-                if (event.getValue() > TEMP_THRESHOLD) {
-                    createAndPublishAlert(event, SystemConstants.EventTypes.HIGH_TEMPERATURE_ALERT, TEMP_THRESHOLD);
+            case "temperature":
+                if (event.getValue() > tempThreshold) {
+                    createAndPublishAlert(event, highTempAlertType, tempThreshold);
                 }
                 break;
-            case SystemConstants.SensorTypes.HUMIDITY:
-                if (event.getValue() < HUMIDITY_THRESHOLD) {
-                    createAndPublishAlert(event, SystemConstants.EventTypes.LOW_HUMIDITY_WARNING, HUMIDITY_THRESHOLD);
+            case "humidity":
+                if (event.getValue() < humidityThreshold) {
+                    createAndPublishAlert(event, lowHumidityWarningType, humidityThreshold);
                 }
                 break;
-            case SystemConstants.SensorTypes.SEISMIC:
-                if (event.getValue() > SEISMIC_THRESHOLD) {
-                    createAndPublishAlert(event, SystemConstants.EventTypes.SEISMIC_ACTIVITY_DETECTED, SEISMIC_THRESHOLD);
+            case "seismic":
+                if (event.getValue() > seismicThreshold) {
+                    createAndPublishAlert(event, seismicActivityDetectedType, seismicThreshold);
                 }
                 break;
             default:
@@ -99,7 +132,7 @@ public class AnalysisService {
             alertEvent.put(TIMESTAMP_KEY, alert.getTimestamp().toString());
 
             // 3. Publicar el evento de alerta al exchange global
-            rabbitTemplate.convertAndSend(RabbitMQConfig.GLOBAL_EVENTS_EXCHANGE, "", alertEvent);
+            rabbitTemplate.convertAndSend(globalEventsExchange, "", alertEvent);
             log.info("Evento de alerta '{}' publicado en RabbitMQ.", alertType);
             
         } catch (Exception e) {
@@ -124,7 +157,7 @@ public class AnalysisService {
             
             // Calcular estadísticas básicas
             Map<String, Object> reportData = new HashMap<>();
-            reportData.put("eventType", SystemConstants.EventTypes.DAILY_REPORT_GENERATED);
+            reportData.put("eventType", dailyReportGeneratedType);
             reportData.put("reportDate", today.toLocalDate().toString());
             reportData.put("totalAlerts", dailyAlerts.size());
             reportData.put(TIMESTAMP_KEY, ZonedDateTime.now().toString());
@@ -140,7 +173,7 @@ public class AnalysisService {
             reportData.put("alertsByType", alertsByType);
             
             // Publicar evento de reporte generado
-            rabbitTemplate.convertAndSend(RabbitMQConfig.GLOBAL_EVENTS_EXCHANGE, "", reportData);
+            rabbitTemplate.convertAndSend(globalEventsExchange, "", reportData);
             log.info("Reporte diario generado y publicado. Total de alertas: {}", dailyAlerts.size());
             
         } catch (Exception e) {
@@ -170,13 +203,13 @@ public class AnalysisService {
                 
                 // Simular evento de sensor inactivo
                 Map<String, Object> inactiveAlert = new HashMap<>();
-                inactiveAlert.put("eventType", SystemConstants.EventTypes.SENSOR_INACTIVE_ALERT);
+                inactiveAlert.put("eventType", sensorInactiveAlertType);
                 inactiveAlert.put("sensorId", "UNKNOWN-SENSORS");
                 inactiveAlert.put("lastSeen", cutoffTime.toString());
                 inactiveAlert.put(TIMESTAMP_KEY, ZonedDateTime.now().toString());
                 inactiveAlert.put("message", "No se detectaron lecturas de sensores en las últimas 24 horas");
                 
-                rabbitTemplate.convertAndSend(RabbitMQConfig.GLOBAL_EVENTS_EXCHANGE, "", inactiveAlert);
+                rabbitTemplate.convertAndSend(globalEventsExchange, "", inactiveAlert);
                 log.info("Evento SensorInactiveAlert emitido para sensores sin actividad reciente.");
             } else {
                 log.info("Verificación de sensores inactivos completada. {} sensores con actividad reciente.", 

@@ -6,27 +6,28 @@ import org.springframework.amqp.core.FanoutExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConfig {
 
-    // El nombre del exchange global donde se publican TODOS los eventos
-    public static final String GLOBAL_EVENTS_EXCHANGE = "environmental.events.exchange";
+    @Value("${app-config.exchanges.global-events}")
+    private String globalEventsExchangeName;
 
-    // Usar la nomenclatura estándar definida en SystemConstants
-    public static final String ANALYZER_QUEUE = SystemConstants.Queues.ENVIRONMENTAL_ANALYZER;
+    @Value("${app-config.queues.analyzer}")
+    private String analyzerQueueName;
 
     @Bean
     public FanoutExchange globalEventsExchange() {
-        return new FanoutExchange(GLOBAL_EVENTS_EXCHANGE, true, false);
+        return new FanoutExchange(globalEventsExchangeName, true, false);
     }
 
     @Bean
     public Queue analyzerQueue() {
         // Una cola duradera para que no se pierdan los mensajes si el servicio se reinicia
-        return new Queue(ANALYZER_QUEUE, true);
+        return new Queue(analyzerQueueName, true);
     }
 
     @Bean

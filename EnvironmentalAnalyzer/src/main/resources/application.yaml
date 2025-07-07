@@ -51,6 +51,30 @@ environmental-analyzer:
     daily-report: "0 0 0 * * ?"
     inactive-sensors-check: "0 0 */6 * * ?"
 
+# Nueva sección para constantes de la aplicación
+app-config:
+  queues:
+    analyzer: "q.events.environmental-analyzer"
+    sensor-data-collector: "q.events.sensor-data-collector"
+    notification-dispatcher: "q.events.notification-dispatcher"
+  exchanges:
+    global-events: "environmental.events.exchange"
+  thresholds:
+    temperature: 40.0
+    humidity: 20.0
+    seismic: 3.0
+  event-types:
+    new-sensor-reading: "NewSensorReadingEvent"
+    high-temp-alert: "HighTemperatureAlert"
+    low-humidity-warning: "LowHumidityWarning"
+    seismic-activity-detected: "SeismicActivityDetected"
+    daily-report-generated: "DailyReportGenerated"
+    sensor-inactive-alert: "SensorInactiveAlert"
+  sensor-types:
+    temperature: "temperature"
+    humidity: "humidity"
+    seismic: "seismic"
+
 # Logging configuration
 logging:
   level:

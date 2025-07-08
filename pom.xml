@@ -21,12 +21,9 @@
         <module>EnvironmentalAnalyzer</module>
         <module>ms-api-gateway</module>
         <module>SensorDataCollector</module>
-        <!-- Añade aquí los otros microservicios cuando los crees -->
-        <!-- <module>environmental-analyzer</module> -->
-        <!-- <module>notification-dispatcher</module> -->
+        <module>NotificationDispatcher</module>
     </modules>
 
-    <!-- Gestión centralizada de versiones para todas las dependencias -->
     <dependencyManagement>
         <dependencies>
             <!-- Spring Boot BOM (Bill of Materials) -->

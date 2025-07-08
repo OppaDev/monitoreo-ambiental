@@ -12,7 +12,9 @@ spring:
   # DataSource Configuration (CockroachDB)
   # -------------------------------------------
   datasource:
-    url: jdbc:postgresql://localhost:26257/environmental_monitoring_db?user=root&password=username=root
+    url: jdbc:postgresql://localhost:26257/environmental_monitoring_db
+    username: root
+    password:
     #password: ""
 
   jpa:

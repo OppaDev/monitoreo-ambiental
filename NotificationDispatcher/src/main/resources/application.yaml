@@ -1,0 +1,78 @@
+spring:
+  application:
+    name: notification-dispatcher
+  cloud:
+    config:
+      enabled: false  # Deshabilita Spring Cloud Config para desarrollo local
+  datasource:
+    url: jdbc:postgresql://localhost:26259/notifications_db
+    username: root
+    password:
+  jpa:
+    hibernate:
+        ddl-auto: update
+    properties:
+        hibernate:
+        dialect: org.hibernate.dialect.CockroachDBDialect
+        format_sql: true
+    show-sql: true
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin
+
+server:
+  port: 0
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+    fetchRegistry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+# Configuración específica del dispatcher de notificaciones
+notification-dispatcher:
+  scheduling:
+    low-priority-dispatch: "0 */30 * * * ?" # Cada 30 minutos
+  recipients:
+    email: "admin@example.com"
+    sms: "+1555123456"
+
+# Configuración de la aplicación (externalizada)
+app-config:
+  queues:
+    dispatcher: "q.events.notification-dispatcher"
+  exchanges:
+    global-events: "environmental.events.exchange"
+  alert-priorities:
+    critical-keywords: "seismic,temperature"  # Cambio a string separado por comas
+    warning-keywords: "warning,humidity"      # Cambio a string separado por comas
+  notification-channels:
+    email: "email"
+    sms: "sms"
+    push: "push"
+  statuses:
+    sent: "SENT"
+    failed: "FAILED"
+    pending: "PENDING"
+
+# Logging configuration
+logging:
+  level:
+    ec.edu.espe.NotificationDispatcher: INFO
+    org.springframework.amqp: DEBUG
+    org.hibernate.SQL: DEBUG

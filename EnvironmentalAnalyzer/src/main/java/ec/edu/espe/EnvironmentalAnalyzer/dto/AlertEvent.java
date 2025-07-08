@@ -1,4 +1,4 @@
-package ec.edu.espe.NotificationDispatcher.dto;
+package ec.edu.espe.EnvironmentalAnalyzer.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,9 +10,9 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 /**
- * DTO para eventos de alerta recibidos desde el EnvironmentalAnalyzer
- * IMPORTANTE: Esta clase debe ser IDÉNTICA a la del EnvironmentalAnalyzer
- * para que RabbitMQ pueda deserializar correctamente los mensajes
+ * DTO para eventos de alerta generados por el EnvironmentalAnalyzer
+ * Este DTO será enviado vía RabbitMQ al NotificationDispatcher
+ * IMPORTANTE: Debe coincidir con el AlertEvent del NotificationDispatcher
  */
 @Data
 @Builder
@@ -23,9 +23,9 @@ public class AlertEvent implements Serializable {
     private String alertId;
     private String type; // ej. "HighTemperatureAlert", "SeismicActivityDetected", "LowHumidityWarning"
     private String sensorId;
-    private BigDecimal value;      // Valor que disparó la alerta (CAMBIADO: era Double)
+    private BigDecimal value;      // Valor que disparó la alerta
     private Double threshold;      // Umbral que se superó
-    private OffsetDateTime timestamp; // Momento de la alerta (CAMBIADO: era ZonedDateTime)
+    private OffsetDateTime timestamp; // Momento de la alerta
     
     // Campos adicionales para mayor contexto
     private String message;

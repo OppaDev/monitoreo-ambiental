@@ -1,5 +1,6 @@
 package ec.edu.espe.EnvironmentalAnalyzer.service;
 
+import ec.edu.espe.EnvironmentalAnalyzer.dto.AlertEvent;
 import ec.edu.espe.EnvironmentalAnalyzer.dto.NewSensorReadingEvent;
 import ec.edu.espe.EnvironmentalAnalyzer.entity.Alert;
 import ec.edu.espe.EnvironmentalAnalyzer.repository.AlertRepository;
@@ -10,6 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -82,17 +85,17 @@ public class AnalysisService {
 
         switch (event.getType().toLowerCase()) {
             case "temperature":
-                if (event.getValue() > tempThreshold) {
+                if (event.getValue().doubleValue() > tempThreshold) {
                     createAndPublishAlert(event, highTempAlertType, tempThreshold);
                 }
                 break;
             case "humidity":
-                if (event.getValue() < humidityThreshold) {
+                if (event.getValue().doubleValue() < humidityThreshold) {
                     createAndPublishAlert(event, lowHumidityWarningType, humidityThreshold);
                 }
                 break;
             case "seismic":
-                if (event.getValue() > seismicThreshold) {
+                if (event.getValue().doubleValue() > seismicThreshold) {
                     createAndPublishAlert(event, seismicActivityDetectedType, seismicThreshold);
                 }
                 break;
@@ -109,12 +112,12 @@ public class AnalysisService {
                 alertType, reading.getSensorId(), reading.getValue(), threshold);
         
         try {
-            // 1. Crear y persistir la alerta
+            // 1. Crear y persistir la alerta en la base de datos
             Alert alert = Alert.builder()
                     .alertId("ALT-" + String.format("%03d", (int)(Math.random() * 1000)))
                     .type(alertType)
                     .sensorId(reading.getSensorId())
-                    .value(reading.getValue())
+                    .value(reading.getValue().doubleValue()) // Convertir BigDecimal a Double para la entidad
                     .threshold(threshold)
                     .timestamp(ZonedDateTime.now())
                     .build();
@@ -122,22 +125,40 @@ public class AnalysisService {
             alertRepository.save(alert);
             log.info("Alerta persistida en la base de datos con ID: {}", alert.getAlertId());
 
-            // 2. Crear el evento de alerta según el formato del documento
-            Map<String, Object> alertEvent = new HashMap<>();
-            alertEvent.put("alertId", alert.getAlertId());
-            alertEvent.put("type", alertType);
-            alertEvent.put("sensorId", reading.getSensorId());
-            alertEvent.put("value", reading.getValue());
-            alertEvent.put("threshold", threshold);
-            alertEvent.put(TIMESTAMP_KEY, alert.getTimestamp().toString());
+            // 2. Crear el AlertEvent DTO para enviar vía RabbitMQ
+            AlertEvent alertEvent = AlertEvent.builder()
+                    .alertId(alert.getAlertId())
+                    .type(alertType)
+                    .sensorId(reading.getSensorId())
+                    .value(reading.getValue()) // Mantener BigDecimal en el DTO
+                    .threshold(threshold)
+                    .timestamp(OffsetDateTime.now()) // Usar OffsetDateTime para compatibilidad
+                    .message(String.format("Sensor %s reportó valor %s que excede umbral %s", 
+                            reading.getSensorId(), reading.getValue(), threshold))
+                    .severity(determineSeverity(alertType))
+                    .build();
 
-            // 3. Publicar el evento de alerta al exchange global
+            // 3. Publicar el AlertEvent DTO al exchange global
             rabbitTemplate.convertAndSend(globalEventsExchange, "", alertEvent);
-            log.info("Evento de alerta '{}' publicado en RabbitMQ.", alertType);
+            log.info("Evento de alerta '{}' publicado en RabbitMQ: {}", alertType, alertEvent);
             
         } catch (Exception e) {
             log.error("Error al procesar alerta para sensor {}: {}", reading.getSensorId(), e.getMessage(), e);
         }
+    }
+
+    /**
+     * Determina la severidad basada en el tipo de alerta
+     */
+    private String determineSeverity(String alertType) {
+        if (alertType.toLowerCase().contains("seismic")) {
+            return "CRITICAL";
+        } else if (alertType.toLowerCase().contains("temperature")) {
+            return "HIGH";
+        } else if (alertType.toLowerCase().contains("warning")) {
+            return "MEDIUM";
+        }
+        return "LOW";
     }
     
     /**

@@ -39,7 +39,10 @@ public class RabbitMQConfig {
     // 4. Configura el MessageConverter para que los objetos se envíen como JSON
     @Bean
     public Jackson2JsonMessageConverter jsonMessageConverter() {
-        return new Jackson2JsonMessageConverter();
+        Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter();
+        // Incluir información de tipo para mejorar la deserialización
+        converter.setCreateMessageIds(true);
+        return converter;
     }
 
     // 5. Configura el RabbitTemplate para que use el convertidor a JSON por defecto

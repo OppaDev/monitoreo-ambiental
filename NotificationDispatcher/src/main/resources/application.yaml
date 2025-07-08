@@ -47,7 +47,7 @@ management:
 # Configuración específica del dispatcher de notificaciones
 notification-dispatcher:
   scheduling:
-    low-priority-dispatch: "0 */30 * * * ?" # Cada 30 minutos
+    low-priority-dispatch: "*/30 * * * * ?" # Cada 30 segundos
   recipients:
     email: "admin@example.com"
     sms: "+1555123456"

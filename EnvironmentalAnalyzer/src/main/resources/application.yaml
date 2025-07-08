@@ -2,7 +2,7 @@ spring:
   application:
     name: environmental-analyzer
   datasource:
-    url: jdbc:postgresql://localhost:26258/analyzer_db?user=root&password=
+    url: jdbc:postgresql://localhost:26258/analyzer_db
     username: root
     password:
   jpa:
@@ -20,7 +20,7 @@ spring:
     password: admin
 
 server:
-  port: 8090
+  port: 0
 
 eureka:
   client:
@@ -51,12 +51,10 @@ environmental-analyzer:
     daily-report: "0 0 0 * * ?"
     inactive-sensors-check: "0 0 */6 * * ?"
 
-# Nueva sección para constantes de la aplicación
+# Constantes de la aplicación
 app-config:
   queues:
     analyzer: "q.events.environmental-analyzer"
-    sensor-data-collector: "q.events.sensor-data-collector"
-    notification-dispatcher: "q.events.notification-dispatcher"
   exchanges:
     global-events: "environmental.events.exchange"
   thresholds:

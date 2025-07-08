@@ -19,11 +19,8 @@
     <modules>
         <module>ms-eureca-server</module>
         <module>EnvironmentalAnalyzer</module>
-        <!-- <module>api-gateway</module> -->
         <module>SensorDataCollector</module>
-        <!-- Añade aquí los otros microservicios cuando los crees -->
-        <!-- <module>environmental-analyzer</module> -->
-        <!-- <module>notification-dispatcher</module> -->
+        <module>NotificationDispatcher</module>
     </modules>
 
     <!-- Gestión centralizada de versiones para todas las dependencias -->

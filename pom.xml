@@ -19,7 +19,7 @@
     <modules>
         <module>ms-eureca-server</module>
         <module>EnvironmentalAnalyzer</module>
-        <!-- <module>api-gateway</module> -->
+        <module>ms-api-gateway</module>
         <module>SensorDataCollector</module>
         <!-- Añade aquí los otros microservicios cuando los crees -->
         <!-- <module>environmental-analyzer</module> -->

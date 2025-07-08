@@ -1,0 +1,44 @@
+server:
+  port: 8010
+spring:
+  application:
+    name: API-GATEWAY
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      server:
+        webmvc:
+          routes:
+            - id: ms-sensor-data-collector
+              uri: lb://sensor-data-collector
+              predicates:
+                - Path=/api/v1/sensor-readings/**
+              filters:
+                - StripPrefix=2
+            - id: ms-environmental-analyzer
+              uri: lb://environmental-analyzer
+              predicates:
+                - Path=/api/v1/analyzer/**
+              filters:
+                - StripPrefix=2
+eureka:
+    client:
+        serviceUrl:
+          defaultZone: http://localhost:8761/eureka/
+        fetch-registry: true
+        register-with-eureka: true
+    instance:
+        prefer-ip-address: true
+        instance-id: ${spring.application.name}:${random.value}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always

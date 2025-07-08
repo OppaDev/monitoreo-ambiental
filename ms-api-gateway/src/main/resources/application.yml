@@ -9,33 +9,6 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
-<<<<<<< HEAD
-      routes:
-        - id: ms-sensor-data-collector
-          uri: lb://sensor-data-collector
-          predicates:
-            - Path=/api/v1/sensor-readings/**
-          filters:
-            - StripPrefix=2
-        - id: ms-environmental-analyzer
-          uri: lb://environmental-analyzer
-          predicates:
-            - Path=/api/v1/analyzer/**
-          filters:
-            - StripPrefix=2
-        - id: notification-dispatcher-mock
-          uri: lb://notification-dispatcher
-          predicates:
-            - Path=/api/v1/mock/**
-          filters:
-            - StripPrefix=2
-        - id: notification-dispatcher-notifications
-          uri: lb://notification-dispatcher
-          predicates:
-            - Path=/api/v1/notifications/**
-          filters:
-            - StripPrefix=2
-=======
       server:
         webmvc:
           routes:
@@ -64,7 +37,6 @@ spring:
               filters:
                 - StripPrefix=2
 eureka:
->>>>>>> 6ce5775296e28fdee25b3a9892a2215c4f6db051
     client:
         serviceUrl:
           defaultZone: http://localhost:8761/eureka/

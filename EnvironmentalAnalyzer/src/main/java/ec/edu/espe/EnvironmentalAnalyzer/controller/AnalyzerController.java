@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("analyzer")
+@RequestMapping("/analyzer")
 @Slf4j
 public class AnalyzerController {
 

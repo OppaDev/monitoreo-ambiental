@@ -24,6 +24,18 @@ spring:
                 - Path=/api/v1/analyzer/**
               filters:
                 - StripPrefix=2
+            - id: ms-notification-dispatcher-mock
+              uri: lb://notification-dispatcher
+              predicates:
+                - Path=/api/v1/mock/**
+              filters:
+                - StripPrefix=2
+            - id: ms-notification-dispatcher-notifications
+              uri: lb://notification-dispatcher
+              predicates:
+                - Path=/api/v1/notifications/**
+              filters:
+                - StripPrefix=2
 eureka:
     client:
         serviceUrl:

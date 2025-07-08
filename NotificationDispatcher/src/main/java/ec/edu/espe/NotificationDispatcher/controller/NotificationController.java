@@ -24,7 +24,7 @@ import java.util.UUID;
  * Proporciona endpoints para consultar logs y estadísticas
  */
 @RestController
-@RequestMapping("/api/notifications")
+@RequestMapping("/notifications")
 @Slf4j
 public class NotificationController {
 
